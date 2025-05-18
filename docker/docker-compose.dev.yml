@@ -2,16 +2,13 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: ../../backend
-      dockerfile: Dockerfile.dev
+    build: ../backend
     ports:
       - "8000:8000"
     volumes:
-      - ../../backend:/app
+      - ../backend:/app
     environment:
-      - DEBUG=1
-      - DATABASE_URL=postgresql://user:pass@db:5432/dev_db
+      - DEBUG=${DEBUG:-0}
     depends_on:
       - db
 
@@ -21,8 +18,6 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: dev_db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
