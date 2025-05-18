@@ -1,6 +1,30 @@
 version: '3.8'
+
 services:
-  web:
-    image: nginx
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.dev
     ports:
-      - "80:80"
+      - "8000:8000"
+    volumes:
+      - ../../backend:/app
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://user:pass@db:5432/dev_db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: dev_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
