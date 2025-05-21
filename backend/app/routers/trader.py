@@ -26,3 +26,23 @@ async def upload_receipt(
     
     await validate_and_save_receipt(file, transaction_id)
     return {"status": "ok"}
+
+@router.get("/disputes")
+async def get_disputes(trader: Trader = Depends(get_current_trader)):
+    return await Dispute.filter(trader_id=trader.id).all()
+
+@router.post("/disputes")
+async def create_dispute(
+    dispute: DisputeCreate,
+    trader: Trader = Depends(get_current_trader)
+):
+    tx = await Transaction.get(id=dispute.transaction_id)
+    if tx.trader_id != trader.id:
+        raise HTTPException(403, "Not your transaction")
+    
+    await Dispute.create(
+        transaction_id=tx.id,
+        reason=dispute.reason
+    )
+    await notify_admin(f"Новый диспут по транзакции {tx.id}")
+    return {"status": "ok"}
