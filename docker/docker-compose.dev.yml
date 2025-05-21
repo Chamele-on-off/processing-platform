@@ -2,16 +2,32 @@ version: '3.8'
 
 services:
   backend:
-    build: ../backend
-    context: ../backend
+    build: 
+      context: ../backend
+      dockerfile: Dockerfile.dev
     ports:
       - "8000:8000"
     volumes:
       - ../backend:/app
     environment:
-      - DEBUG=${DEBUG:-0}
+      - DEBUG=1
+      - DATABASE_URL=postgresql://user:pass@db:5432/dev_db
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     depends_on:
       - db
+      - redis
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
 
   db:
     image: postgres:13
@@ -21,6 +37,11 @@ services:
       POSTGRES_DB: dev_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:
