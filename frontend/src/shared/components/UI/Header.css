@@ -1,0 +1,69 @@
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  background: #001529;
+  height: 64px;
+  line-height: 64px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo-link {
+  margin-right: 24px;
+}
+
+.main-menu {
+  line-height: 62px;
+  border-bottom: none;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.notification-badge {
+  margin-right: 24px;
+  cursor: pointer;
+}
+
+.notification-icon {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.65);
+  transition: color 0.3s;
+}
+
+.notification-icon:hover {
+  color: #fff;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.user-profile:hover {
+  opacity: 0.8;
+}
+
+.user-avatar {
+  margin-right: 8px;
+  background: #1890ff;
+}
+
+.user-name {
+  color: rgba(255, 255, 255, 0.85);
+  margin-right: 8px;
+}
+
+.user-dropdown-icon {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}
