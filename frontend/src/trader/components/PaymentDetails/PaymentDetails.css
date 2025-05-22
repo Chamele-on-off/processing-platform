@@ -1,0 +1,23 @@
+.payment-detail-item {
+  margin-bottom: 16px;
+}
+
+.payment-detail-item .detail-header {
+  margin-bottom: 12px;
+}
+
+.payment-detail-item .detail-content {
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.payment-detail-item .detail-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.error-message {
+  color: #ff4d4f;
+}
