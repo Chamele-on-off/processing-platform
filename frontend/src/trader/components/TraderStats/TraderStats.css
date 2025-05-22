@@ -1,0 +1,15 @@
+.stats-card {
+  margin-bottom: 16px;
+}
+
+.stats-card .ant-card-head-title {
+  font-weight: 500;
+}
+
+.stats-card .ant-statistic-title {
+  font-size: 14px;
+}
+
+.stats-card .ant-statistic-content {
+  font-size: 20px;
+}
