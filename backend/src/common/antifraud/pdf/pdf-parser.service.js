@@ -1,48 +1,17 @@
-const { PDFDocument } = require('pdf-lib');
-const fetch = require('node-fetch');
-const logger = require('../../../utils/logger');
+const { parsePdf } = require('./pdf-parser.service');
+const { extractTextFromImage } = require('./utils/text-extractor');
+const { analyzeImage } = require('./utils/image-analyzer');
 
 module.exports = {
   async parsePdf(pdfUrl) {
-    try {
-      // Загрузка PDF
-      const response = await fetch(pdfUrl);
-      const pdfBuffer = await response.arrayBuffer();
-      
-      // Парсинг PDF
-      const pdfDoc = await PDFDocument.load(pdfBuffer);
-      const pages = pdfDoc.getPages();
-      const textContents = await Promise.all(
-        pages.map(page => page.getTextContent())
-      );
-      
-      // Извлечение текста
-      const text = textContents
-        .map(content => content.items.map(item => item.str).join(' '))
-        .join('\n');
-
-      // Извлечение метаданных
-      const metadata = {
-        title: pdfDoc.getTitle(),
-        author: pdfDoc.getAuthor(),
-        creator: pdfDoc.getCreator(),
-        isSigned: pdfDoc.isSigned(),
-        pageCount: pdfDoc.getPageCount()
-      };
-
-      return {
-        text,
-        metadata,
-        raw: {
-          version: pdfDoc.getVersion(),
-          keywords: pdfDoc.getKeywords(),
-          creationDate: pdfDoc.getCreationDate(),
-          modificationDate: pdfDoc.getModificationDate()
-        }
-      };
-    } catch (error) {
-      logger.error('PDF parsing failed:', error);
-      throw error;
+    const pdfData = await parsePdf(pdfUrl);
+    
+    // Дополнительная проверка изображений в PDF
+    if (pdfData.hasImages) {
+      const imageAnalysis = await analyzeImage(pdfData.images[0]);
+      pdfData.imageAnalysis = imageAnalysis;
     }
+    
+    return pdfData;
   }
 };
