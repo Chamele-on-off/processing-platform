@@ -1,0 +1,25 @@
+:root {
+  /* Colors */
+  --primary-color: #1890ff;
+  --secondary-color: #13c2c2;
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #f5222d;
+  --text-color: rgba(0, 0, 0, 0.85);
+  --text-secondary: rgba(0, 0, 0, 0.45);
+  --border-color: #d9d9d9;
+  --background-color: #f0f2f5;
+
+  /* Sizes */
+  --header-height: 64px;
+  --sidebar-width: 200px;
+  --border-radius: 4px;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+}
