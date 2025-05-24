@@ -2,73 +2,62 @@ version: '3.8'
 
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        NODE_ENV: production
     ports:
       - "5000:5000"
     environment:
-      - NODE_ENV=development
       - DB_URL=mongodb://mongo:27017/processing-platform
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - mongo
       - redis
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: 1.5G
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NODE_ENV: production
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   mongo:
     image: mongo:6.0
-    ports:
-      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - mongodb_data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
 
   redis:
     image: redis:7.0-alpine
-    ports:
-      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
-    deploy:
-      resources:
-        limits:
-          cpus: '0.3'
-          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
 
   rabbitmq:
     image: rabbitmq:3.11-management-alpine
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-    deploy:
-      resources:
-        limits:
-          cpus: '0.3'
-          memory: 256M
 
 volumes:
   mongodb_data:
