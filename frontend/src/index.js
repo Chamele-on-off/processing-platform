@@ -1,10 +1,16 @@
+// src/index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { setupAxiosInterceptors } from './utils/auth';
-setupAxiosInterceptors()
+import { getAuthToken } from './utils/auth';
+
+// Проверка аутентификации при загрузке
+if (getAuthToken()) {
+  // Здесь можно добавить проверку валидности токена
+  // например, через запрос к /api/auth/validate
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -13,4 +19,5 @@ root.render(
   </React.StrictMode>
 );
 
+// Если используете web-vitals
 reportWebVitals();
