@@ -1,14 +1,12 @@
 // src/utils/auth.js
 import axios from 'axios';
-import { API_URL } from '../config';
 
-// Функция для входа пользователя
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+// Основные функции аутентификации
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, {
-      email,
-      password
-    });
+    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
     
     if (response.data.token) {
       localStorage.setItem('user', JSON.stringify(response.data));
@@ -20,47 +18,31 @@ export const login = async (email, password) => {
   }
 };
 
-// Функция для выхода
 export const logout = () => {
   localStorage.removeItem('user');
 };
 
-// Проверка аутентификации
 export const isAuthenticated = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   return !!user?.token;
 };
 
-// Получение текущего пользователя
 export const getCurrentUser = () => {
-  return JSON.parse(localStorage.getItem('user'));
+  return JSON.parse(localStorage.getItem('user') || 'null');
 };
 
-// Функция для регистрации
-export const register = async (userData) => {
-  try {
-    const response = await axios.post(`${API_URL}/auth/register`, userData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data?.message || 'Registration failed';
-  }
-};
-
-// Получение токена
 export const getAuthToken = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   return user?.token;
 };
 
-// Интерцептор для axios
-export const setupAxiosInterceptors = () => {
-  axios.interceptors.request.use(config => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  }, error => {
-    return Promise.reject(error);
-  });
-};
+// Настройка axios для автоматической авторизации
+axios.interceptors.request.use(config => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, error => {
+  return Promise.reject(error);
+});
