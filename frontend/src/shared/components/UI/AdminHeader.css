@@ -1,0 +1,38 @@
+.admin-header {
+  background: #fff !important;
+  padding: 0 24px !important;
+  height: 64px;
+  line-height: 64px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 9;
+}
+
+.header-content {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.notification-badge {
+  cursor: pointer;
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.user-name {
+  font-weight: 500;
+}
