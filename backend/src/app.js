@@ -45,6 +45,7 @@ app.use((req, res, next) => {
 app.use(`${config.api.prefix}/${config.api.version}/admin`, require('./admin/routes/admin.routes'));
 app.use(`${config.api.prefix}/${config.api.version}/trader`, require('./trader/routes/trader.routes'));
 app.use(`${config.api.prefix}/${config.api.version}/merchant`, require('./merchant/routes/merchant.routes'));
+app.use(`${config.api.prefix}/${config.api.version}/merchant_api`, require('./merchant/routes/api.routes'));
 
 // 3. Health checks
 app.get('/health', (req, res) => {
