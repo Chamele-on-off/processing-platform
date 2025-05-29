@@ -1,10 +1,27 @@
 const Transaction = require('../models/transaction.model');
 const User = require('../models/user.model');
-const { successResponse, errorResponse } = require('../utils/api-response');
 const logger = require('../utils/logger');
 const axios = require('axios');
 
 class DepositService {
+  async checkPendingDeposits() {
+    try {
+      const pendingDeposits = await Transaction.find({
+        type: 'trader_deposit',
+        status: 'pending',
+        createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      });
+      
+      for (const deposit of pendingDeposits) {
+        await this.processDeposit(deposit);
+      }
+      
+      logger.info(`Processed ${pendingDeposits.length} pending deposits`);
+    } catch (error) {
+      logger.error('Pending deposits check failed:', error);
+    }
+  }
+
   async createDepositRequest(traderId, amount, currency, paymentDetails) {
     try {
       // Проверяем существующего трейдера
@@ -44,7 +61,7 @@ class DepositService {
         throw new Error('Deposit not found');
       }
 
-      // Здесь должна быть интеграция с API банка для подтверждения платежа
+      // Проверяем подтверждение платежа
       const isConfirmed = await this.verifyBankConfirmation(
         deposit.paymentDetails,
         confirmationData
@@ -69,10 +86,46 @@ class DepositService {
     }
   }
 
-  async verifyBankConfirmation(paymentDetails, confirmationData) {
-    // Интеграция с API банка или SMS-парсером
-    // Это упрощенная реализация, в реальности нужно подключать банковский API
+  async cancelDeposit(depositId) {
     try {
+      const deposit = await Transaction.findByIdAndUpdate(
+        depositId,
+        { status: 'cancelled' },
+        { new: true }
+      );
+      
+      if (deposit && deposit.trader) {
+        await User.findByIdAndUpdate(deposit.trader, {
+          $inc: { 'traderDetails.insuranceDeposit': -deposit.amount }
+        });
+      }
+      
+      return deposit;
+    } catch (error) {
+      logger.error(`Deposit cancellation failed for ${depositId}:`, error);
+      throw error;
+    }
+  }
+
+  async processDeposit(deposit) {
+    try {
+      // Логика обработки депозита
+      const isConfirmed = await this.mockBankConfirmation(deposit);
+      
+      if (isConfirmed) {
+        await this.confirmDeposit(deposit._id, {});
+      } else {
+        await this.cancelDeposit(deposit._id);
+      }
+    } catch (error) {
+      logger.error(`Deposit processing failed for ${deposit._id}:`, error);
+    }
+  }
+
+  async verifyBankConfirmation(paymentDetails, confirmationData) {
+    try {
+      // Интеграция с API банка или SMS-парсером
+      // Это упрощенная реализация, в реальности нужно подключать банковский API
       const response = await axios.post('https://bank-api.example.com/verify', {
         paymentDetails,
         confirmationData
@@ -84,11 +137,27 @@ class DepositService {
     }
   }
 
+  async mockBankConfirmation(deposit) {
+    // В реальной системе здесь будет вызов банковского API
+    return Math.random() > 0.2; // 80% вероятность успеха для теста
+  }
+
   async activateTraderDetails(traderId) {
-    await User.updateOne(
-      { _id: traderId, 'paymentDetails.isActive': false },
-      { $set: { 'paymentDetails.isActive': true } }
-    );
+    try {
+      await User.updateOne(
+        { _id: traderId },
+        { 
+          $set: { 
+            'paymentDetails.isActive': true,
+            'paymentDetails.isVerified': true 
+          } 
+        }
+      );
+      logger.info(`Trader ${traderId} details activated`);
+    } catch (error) {
+      logger.error(`Trader details activation failed for ${traderId}:`, error);
+      throw error;
+    }
   }
 }
 
