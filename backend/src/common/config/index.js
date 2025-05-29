@@ -1,18 +1,21 @@
 const logger = require('../utils/logger');
 
 module.exports = {
-  // Основные настройки
+  // Application
   env: process.env.NODE_ENV || 'development',
   port: process.env.PORT || 3000,
   baseUrl: process.env.BASE_URL || 'http://localhost:3000',
 
-  // JWT настройки
-  jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
-  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret',
-  refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
+  // Security
+  isProduction: process.env.NODE_ENV === 'production',
+  corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost'],
+  cookieSecret: process.env.COOKIE_SECRET || 'your-secret-key',
+  rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: process.env.RATE_LIMIT_MAX || 100
+  },
 
-  // Настройки базы данных
+  // Database
   db: {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/processing',
     options: {
@@ -23,49 +26,42 @@ module.exports = {
     }
   },
 
-  // Настройки Redis
+  // Redis
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
-    ttl: 24 * 60 * 60 // 24 часа
+    ttl: 24 * 60 * 60 // 24 hours
   },
 
-  // Настройки RabbitMQ
-  rabbitmq: {
-    url: process.env.RABBITMQ_URL || 'amqp://localhost',
-    queues: {
-      transactions: 'transactions_queue',
-      notifications: 'notifications_queue'
-    }
+  // JWT
+  jwt: {
+    secret: process.env.JWT_SECRET || 'your-jwt-secret',
+    expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d'
   },
 
-  // Настройки антифрода
-  antifraud: {
-    pdfAnalysisTimeout: process.env.PDF_ANALYSIS_TIMEOUT || 5000,
-    maxTransactionAmount: process.env.MAX_TRANSACTION_AMOUNT || 100000
+  // Monitoring
+  monitoring: {
+    interval: process.env.MONITORING_INTERVAL || 30000, // 30 seconds
+    memoryThreshold: 0.8, // 80% memory usage
+    cpuThreshold: 0.7 // 70% CPU usage
   },
 
-  // Настройки API
-  api: {
-    prefix: '/api',
-    version: 'v1',
-    rateLimit: {
-      windowMs: 15 * 60 * 1000, // 15 минут
-      max: 100 // лимит запросов
-    }
-  },
-
-  // Инициализация конфига
+  // Init and validation
   init() {
+    if (this.isProduction) {
+      this.validateProductionConfig();
+    }
     logger.info('Configuration loaded');
-    logger.debug('Current config:', this.sanitizeForLog());
     return this;
   },
 
-  // Метод для безопасного логирования (без секретов)
-  sanitizeForLog() {
-    const config = { ...this };
-    delete config.jwtSecret;
-    delete config.refreshTokenSecret;
-    return config;
+  validateProductionConfig() {
+    const required = ['MONGODB_URI', 'JWT_SECRET', 'REDIS_URL', 'COOKIE_SECRET'];
+    required.forEach(key => {
+      if (!process.env[key]) {
+        throw new Error(`Missing required config: ${key}`);
+      }
+    });
   }
 }.init();
