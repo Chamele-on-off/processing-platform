@@ -4,23 +4,34 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+COPY tsconfig*.json ./
+COPY src ./src
+
+RUN npm ci --only=production && \
+    npm run build && \
+    npm prune --production
 
 # Stage 2: Run
 FROM node:18-alpine
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+ENV PORT=3000
+
 COPY --from=builder /app/node_modules ./node_modules
-COPY . .
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
+COPY .env.prod ./
 
 RUN mkdir -p ./logs && \
-    touch ./logs/error.log && \
-    touch ./logs/combined.log && \
     chown -R node:node ./logs
 
 USER node
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node ./dist/common/services/health-check.js
+
+CMD ["node", "./dist/server.js"]
