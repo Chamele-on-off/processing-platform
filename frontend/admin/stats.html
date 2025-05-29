@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель | Статистика</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../../assets/css/style.css" rel="stylesheet">
+    <style>
+        #sidebar-wrapper {
+            min-height: 100vh;
+            transition: margin 0.25s ease-out;
+        }
+        #sidebar-wrapper .sidebar-heading {
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        #sidebar-wrapper .list-group {
+            width: 250px;
+        }
+        #page-content-wrapper {
+            min-width: 0;
+            width: 100%;
+        }
+        .stat-card {
+            border-left: 0.25rem solid #4e73df;
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-dark text-white" id="sidebar-wrapper">
+            <div class="sidebar-heading p-4">
+                <i class="fas fa-user-shield me-2"></i>Администратор
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="index.html" class="list-group-item list-group-item-action bg-dark text-white">
+                    <i class="fas fa-tachometer-alt me-2"></i>Дашборд
+                </a>
+                <a href="stats.html" class="list-group-item list-group-item-action bg-dark text-white active">
+                    <i class="fas fa-chart-bar me-2"></i>Статистика
+                </a>
+                <a href="users.html" class="list-group-item list-group-item-action bg-dark text-white">
+                    <i class="fas fa-users me-2"></i>Пользователи
+                </a>
+                <a href="../../index.html" class="list-group-item list-group-item-action bg-dark text-white">
+                    <i class="fas fa-home me-2"></i>На главную
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid px-4">
+                    <button class="btn btn-link" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="navbar-nav ms-auto">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>Администратор
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Профиль</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Выйти</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-chart-bar me-2"></i>Статистика</h1>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="periodDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-calendar-alt me-2"></i>Последние 30 дней
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-period="7">Последние 7 дней</a></li>
+                            <li><a class="dropdown-item" href="#" data-period="30">Последние 30 дней</a></li>
+                            <li><a class="dropdown-item" href="#" data-period="90">Последние 90 дней</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" data-period="custom">Выбрать период</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-lg-8">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Объем транзакций</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-area">
+                                    <canvas id="transactionsVolumeChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Распределение по типам</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-pie pt-4">
+                                    <canvas id="transactionsTypeChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Топ трейдеров по объему</h6>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#">Экспорт в CSV</a></li>
+                                        <li><a class="dropdown-item" href="#">Печать</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Трейдер</th>
+                                                <th>Объем</th>
+                                                <th>Конверсия</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="top-traders">
+                                            <!-- Данные будут загружены через JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Топ мерчантов по объему</h6>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#">Экспорт в CSV</a></li>
+                                        <li><a class="dropdown-item" href="#">Печать</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Мерчант</th>
+                                                <th>Объем</th>
+                                                <th>Транзакций</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="top-merchants">
+                                            <!-- Данные будут загружены через JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/admin.js"></script>
+    <script>
+        // Toggle sidebar
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('wrapper').classList.toggle('toggled');
+        });
+        
+        // Load stats data
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatsData(30); // Load data for last 30 days by default
+        });
+        
+        // Period dropdown handler
+        document.querySelectorAll('[data-period]').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const period = this.getAttribute('data-period');
+                if (period === 'custom') {
+                    // TODO: Implement custom period selection
+                    alert('Выбор периода будет реализован позже');
+                } else {
+                    document.getElementById('periodDropdown').innerHTML = 
+                        `<i class="fas fa-calendar-alt me-2"></i>Последние ${period} дней`;
+                    loadStatsData(parseInt(period));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
