@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мерчант | API интеграция</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../../assets/css/style.css" rel="stylesheet">
+    <style>
+        #sidebar-wrapper {
+            min-height: 100vh;
+            transition: margin 0.25s ease-out;
+        }
+        #sidebar-wrapper .sidebar-heading {
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        #sidebar-wrapper .list-group {
+            width: 250px;
+        }
+        #page-content-wrapper {
+            min-width: 0;
+            width: 100%;
+        }
+        .api-key {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-dark text-white" id="sidebar-wrapper">
+            <div class="sidebar-heading p-4">
+                <i class="fas fa-store me-2"></i>Мерчант
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="index.html" class="list-group-item list-group-item-action bg-dark text-white">
+                    <i class="fas fa-tachometer-alt me-2"></i>Дашборд
+                </a>
+                <a href="api.html" class="list-group-item list-group-item-action bg-dark text-white active">
+                    <i class="fas fa-code me-2"></i>API интеграция
+                </a>
+                <a href="../../index.html" class="list-group-item list-group-item-action bg-dark text-white">
+                    <i class="fas fa-home me-2"></i>На главную
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid px-4">
+                    <button class="btn btn-link" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="navbar-nav ms-auto">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>Мерчант
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Профиль</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Выйти</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-code me-2"></i>API интеграция</h1>
+                    <button class="btn btn-primary" id="generate-api-key">
+                        <i class="fas fa-key me-2"></i>Сгенерировать новый ключ
+                    </button>
+                </div>
+                
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Текущие API ключи</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Ключ</th>
+                                                <th>Создан</th>
+                                                <th>Действия</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="api-keys-list">
+                                            <!-- Данные будут загружены через JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Документация API</h6>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="mb-3">Получение реквизитов для депозита</h5>
+                                <div class="mb-3">
+                                    <span class="badge bg-primary me-2">POST</span>
+                                    <code>/api/v1/merchant_api/requisite</code>
+                                </div>
+                                
+                                <p class="mb-2">Параметры запроса:</p>
+                                <div class="code-block mb-3">
+{
+  "amount": 10000,
+  "currency": "RUB",
+  "paymentMethod": "bank_account"
+}
+                                </div>
+                                
+                                <p class="mb-2">Пример ответа:</p>
+                                <div class="code-block mb-4">
+{
+  "success": true,
+  "data": {
+    "requisites": {
+      "bank_name": "Сбербанк",
+      "account_number": "4276********1234",
+      "recipient": "Иванов И.И."
+    },
+    "reservation_key": "req_123456789",
+    "expires_at": "2023-12-31T23:59:59Z"
+  }
+}
+                                </div>
+                                
+                                <h5 class="mb-3">Подтверждение платежа</h5>
+                                <div class="mb-3">
+                                    <span class="badge bg-primary me-2">POST</span>
+                                    <code>/api/v1/merchant_api/confirm</code>
+                                </div>
+                                
+                                <p class="mb-2">Параметры запроса:</p>
+                                <div class="code-block">
+{
+  "reservation_key": "req_123456789",
+  "client_data": {
+    "user_id": "12345",
+    "email": "client@example.com"
+  }
+}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для нового API ключа -->
+    <div class="modal fade" id="apiKeyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Новый API ключ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Сохраните этот ключ сейчас, так как позже он не будет отображаться!
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">API ключ</label>
+                        <div class="api-key" id="new-api-key">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Секретный ключ</label>
+                        <div class="api-key" id="new-api-secret">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary" id="copy-api-keys">
+                        <i class="fas fa-copy me-2"></i>Копировать
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/merchant.js"></script>
+    <script>
+        // Toggle sidebar
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('wrapper').classList.toggle('toggled');
+        });
+        
+        // Load API keys
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiKeys();
+        });
+    </script>
+</body>
+</html>
