@@ -1,46 +1,72 @@
 const winston = require('winston');
-const { combine, timestamp, printf, colorize, json } = winston.format;
+const { combine, timestamp, printf, errors, json } = winston.format;
+const DailyRotateFile = require('winston-daily-rotate-file');
+const { env, isProduction } = require('../config');
 
 const logFormat = printf(({ level, message, timestamp, stack }) => {
   return `${timestamp} [${level}]: ${stack || message}`;
 });
 
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: combine(
-    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    colorize(),
-    logFormat
+const transports = [
+  new DailyRotateFile({
+    filename: 'logs/application-%DATE%.log',
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: true,
+    maxSize: '20m',
+    maxFiles: '30d',
+    format: combine(timestamp(), errors({ stack: true }), json())
   ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ 
-      filename: 'logs/error.log', 
-      level: 'error',
-      format: json()
-    }),
-    new winston.transports.File({ 
-      filename: 'logs/combined.log',
-      format: json()
-    })
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/exceptions.log' })
-  ]
-});
+  new DailyRotateFile({
+    level: 'error',
+    filename: 'logs/error-%DATE%.log',
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: true,
+    maxSize: '20m',
+    maxFiles: '90d',
+    format: combine(timestamp(), errors({ stack: true }), json())
+  )
+];
 
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
+if (!isProduction) {
+  transports.push(new winston.transports.Console({
     format: combine(
-      colorize(),
+      winston.format.colorize(),
+      timestamp(),
+      errors({ stack: true }),
       logFormat
     )
   }));
 }
 
-// Для промисов без catch
-process.on('unhandledRejection', (reason) => {
-  logger.error('Unhandled Rejection:', reason);
+const logger = winston.createLogger({
+  level: env === 'development' ? 'debug' : 'info',
+  format: combine(
+    timestamp(),
+    errors({ stack: true }),
+    json()
+  ),
+  transports,
+  exceptionHandlers: [
+    new DailyRotateFile({
+      filename: 'logs/exceptions-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true
+    })
+  ],
+  rejectionHandlers: [
+    new DailyRotateFile({
+      filename: 'logs/rejections-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true
+    })
+  ]
 });
+
+// For morgan HTTP logs
+logger.stream = {
+  write: (message) => {
+    logger.info(message.trim());
+  }
+};
 
 module.exports = logger;
