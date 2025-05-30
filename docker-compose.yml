@@ -4,16 +4,17 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.prod
+      dockerfile: ${DOCKERFILE_BACKEND:-Dockerfile.prod}
       args:
-        NODE_ENV: production
+        NODE_ENV: ${NODE_ENV:-production}
     image: processing-platform-backend
     container_name: backend
     restart: unless-stopped
     ports:
       - "5000:5000"
+      - "9229:9229" # Для дебага Node.js
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=5000
       - MONGODB_URI=mongodb://root:example@mongo:27017/processing-platform?authSource=admin
       - REDIS_URL=redis://redis:6379
@@ -23,6 +24,9 @@ services:
       - PDF_VERIFICATION_ENABLED=true
       - AUTO_MATCHING_ENABLED=true
     volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
       - ./backend/logs:/app/logs
       - ./backend/backups:/app/backups
     depends_on:
@@ -33,43 +37,104 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.prod
+      dockerfile: ${DOCKERFILE_FRONTEND:-Dockerfile.prod}
     image: processing-platform-frontend
     container_name: frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "3000:3000"
+      - "24678:24678" # Для vite HMR
     volumes:
       - ./frontend:/usr/share/nginx/html
+      - /usr/share/nginx/html/node_modules
     environment:
-      - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
-      - API_URL=http://backend:5000
+      - NODE_ENV=${NODE_ENV:-production}
+      - VITE_API_URL=http://localhost:5000
+      - CHOKIDAR_USEPOLLING=true # Для работы на Mac
     depends_on:
       - backend
 
   mongo:
     image: mongo:6.0
-    # ... (остальное без изменений)
+    container_name: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: processing-platform
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-backup:/backup
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7.0-alpine
-    # ... (остальное без изменений)
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   rabbitmq:
     image: rabbitmq:3.11-management-alpine
-    # ... (остальное без изменений)
+    container_name: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Management UI
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   nginx:
     image: nginx:1.23-alpine
+    container_name: nginx
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./frontend:/usr/share/nginx/html
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./nginx/ssl:/etc/nginx/ssl
     depends_on:
       - frontend
       - backend
+
+  # Для разработки на Mac
+  watch:
+    image: busybox
+    container_name: watch
+    volumes:
+      - ./frontend:/watch
+    command: >
+      /bin/sh -c "
+      while true; do
+        touch /watch/.hot-reload
+        sleep 30
+      done
+      "
 
 volumes:
   mongodb_data:
