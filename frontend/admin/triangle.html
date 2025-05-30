@@ -1,0 +1,61 @@
+<!--#include virtual="/partials/header.html" -->
+<!--#include virtual="/partials/sidebar-admin.html" -->
+
+<main class="content">
+  <div class="page-header">
+    <h1>Треугольные транзакции</h1>
+    <div class="controls">
+      <button id="refreshTriangle" class="btn">Обновить</button>
+      <div class="search-box">
+        <input type="text" placeholder="Поиск по ID..." id="triangleSearch">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="auto">Автоматические</button>
+      <button class="tab-btn" data-tab="manual">Ручные</button>
+      <button class="tab-btn" data-tab="settings">Настройки</button>
+    </div>
+
+    <div class="tab-content active" id="autoTab">
+      <div class="triangle-stats">
+        <div class="stat-card">
+          <span class="stat-value" id="triangleEfficiency">0%</span>
+          <span class="stat-label">Эффективность</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="triangleVolume">0 ₽</span>
+          <span class="stat-label">Объём за 24ч</span>
+        </div>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Депозиты</th>
+            <th>Выплата</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="triangleTransactions"></tbody>
+      </table>
+    </div>
+
+    <div class="tab-content" id="manualTab">
+      <!-- Форма для ручного создания треугольной транзакции -->
+    </div>
+
+    <div class="tab-content" id="settingsTab">
+      <!-- Настройки алгоритма матчинга -->
+    </div>
+  </div>
+</main>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script src="/assets/js/triangle.js" type="module"></script>
