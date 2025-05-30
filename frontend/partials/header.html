@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Processing Platform</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="/assets/img/favicon.ico">
+</head>
+<body>
+  <header class="main-header">
+    <div class="container">
+      <div class="logo">
+        <img src="/assets/img/logo.svg" alt="Processing Platform">
+        <span class="version">v1.0.0</span>
+      </div>
+      
+      <div class="user-panel">
+        <div class="notifications">
+          <button id="notificationsButton">
+            <span class="badge">0</span>
+            <i class="icon-bell"></i>
+          </button>
+        </div>
+        <div class="user-profile">
+          <img src="/assets/img/avatar-placeholder.png" class="avatar" alt="User">
+          <span class="username">Loading...</span>
+          <div class="dropdown-menu">
+            <a href="/profile">Профиль</a>
+            <a href="/logout">Выйти</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="notifications-container"></div>
+  <div id="pageLoader" class="page-loader">
+    <div class="spinner"></div>
+  </div>
