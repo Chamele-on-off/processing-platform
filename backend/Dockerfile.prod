@@ -1,0 +1,39 @@
+# Stage 1: Build
+FROM node:18-alpine as builder
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY tsconfig*.json ./
+COPY src ./src
+
+RUN npm ci --quiet && npm run build
+
+# Stage 2: Production
+FROM node:18-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=5000
+
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+
+# Установка только production зависимостей
+RUN npm prune --production
+
+# Установка инструментов для диагностики (можно удалить в production)
+RUN apk add --no-cache \
+    curl \
+    vim \
+    htop \
+    lsof
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/health || exit 1
+
+EXPOSE ${PORT}
+
+CMD ["node", "./dist/server.js"]
