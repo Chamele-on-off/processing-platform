@@ -1,12 +1,12 @@
 node_modules
 npm-debug.log
+dist
+logs
+backups
 .env
-.DS_Store
+docker-compose*.yml
+Dockerfile*
 .git
-.gitignore
 .idea
 .vscode
-coverage
-dist
 *.md
-*.log
