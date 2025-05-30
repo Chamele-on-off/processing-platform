@@ -1,0 +1,32 @@
+  <footer class="main-footer">
+    <div class="container">
+      <div class="footer-left">
+        <p>&copy; 2023 Processing Platform. Все права защищены.</p>
+      </div>
+      <div class="footer-right">
+        <a href="/terms">Пользовательское соглашение</a>
+        <a href="/privacy">Политика конфиденциальности</a>
+        <a href="/support">Поддержка</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/utils.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/notifications.js"></script>
+  <script type="module">
+    // Инициализация после загрузки всех скриптов
+    document.addEventListener('DOMContentLoaded', () => {
+      Utils.checkAuth().then(authenticated => {
+        if (!authenticated) window.location.href = '/login.html';
+      });
+      
+      // Обновляем имя пользователя в хедере
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (userData) {
+        document.querySelector('.username').textContent = userData.name;
+      }
+    });
+  </script>
+</body>
+</html>
