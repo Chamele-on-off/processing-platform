@@ -10,4 +10,13 @@ def handle_connect():
 def handle_auth(data):
     user = User.verify_jwt(data['token'])
     if user:
-        emit('auth_success
+        emit('auth_success', {'user_id': user.id})
+    else:
+        emit('auth_failed')
+
+def send_notification(user_id, message):
+    socketio.emit('notification', {
+        'user_id': user_id,
+        'message': message,
+        'timestamp': datetime.utcnow().isoformat()
+    }, room=str(user_id))
