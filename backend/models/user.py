@@ -1,11 +1,11 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token
-from extensions import db
 from datetime import datetime
+from extensions import db
 
 class User(db.Model):
     __tablename__ = 'users'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
@@ -16,36 +16,41 @@ class User(db.Model):
     ip_address = db.Column(db.String(45))
     geo_location = db.Column(db.String(100))
     balance = db.Column(db.Float, default=0.0)
-    insurance_deposit = db.Column(db.Float, default=0.0)  # Страховой депозит
-    
+    insurance_deposit = db.Column(db.Float, default=0.0)
+    priority = db.Column(db.Integer, default=0)  # Приоритет в выдаче заявок
+
     # Связи
-    transactions = db.relationship('Transaction', foreign_keys='Transaction.merchant_id')
-    trader_transactions = db.relationship('Transaction', foreign_keys='Transaction.trader_id')
-    requisites = db.relationship('Requisite', backref='user')
-    
+    transactions = db.relationship('Transaction', foreign_keys='Transaction.merchant_id', backref='merchant')
+    trader_transactions = db.relationship('Transaction', foreign_keys='Transaction.trader_id', backref='trader')
+    requisites = db.relationship('Requisite', back_populates='user', lazy='dynamic')
+    disputes = db.relationship('Dispute', foreign_keys='Dispute.initiator_id', backref='initiator')
+    resolved_disputes = db.relationship('Dispute', foreign_keys='Dispute.resolved_by', backref='resolver')
+    audit_logs = db.relationship('AuditLog', back_populates='user')
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def generate_token(self):
         return create_access_token(identity={
             'id': self.id,
             'email': self.email,
             'role': self.role
         })
-    
+
     @classmethod
     def get_available_traders(cls):
-        """Получение активных трейдеров с учетом приоритетов"""
+        """Получение трейдеров с сортировкой по приоритету и депозиту"""
         return cls.query.filter_by(
             role='trader',
             is_active=True
         ).order_by(
-            cls.insurance_deposit.desc()  # Сначала трейдеры с большим депозитом
+            cls.priority.desc(),
+            cls.insurance_deposit.desc()
         ).all()
-    
+
     @classmethod
     def authenticate(cls, email, password):
         user = cls.query.filter_by(email=email).first()
@@ -54,7 +59,7 @@ class User(db.Model):
             db.session.commit()
             return user
         return None
-    
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -62,5 +67,12 @@ class User(db.Model):
             'role': self.role,
             'balance': self.balance,
             'insurance_deposit': self.insurance_deposit,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'priority': self.priority
         }
+
+    def update_activity(self, ip_address):
+        """Обновление данных активности"""
+        self.ip_address = ip_address
+        self.last_login = datetime.utcnow()
+        db.session.commit()
